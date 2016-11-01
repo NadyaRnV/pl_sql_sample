@@ -1,67 +1,67 @@
 PACKAGE BODY            pkg_dep_oborotmat_i
 IS
 
--- Óñòàíîâèòü ïàðàìåòð "ID ìàòåðèàëà"
+-- Установить параметр "ID материала"
 PROCEDURE SetID_Mat (aID_Mat IN DBRFO.Mater.ID_Mat%TYPE) IS
 BEGIN
   DBMS_SESSION.SET_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('ID_MAT'), TO_CHAR(aID_Mat));
 END;
 
--- Ïîëó÷èòü ïàðàìåòð "ID ìàòåðèàëà"
+-- Получить параметр "ID материала"
 FUNCTION GetID_Mat RETURN DBRFO.Mater.ID_Mat%TYPE IS
 BEGIN
   RETURN TO_NUMBER(SYS_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('ID_MAT')));
 END;
 
--- Óñòàíîâèòü ïàðàìåòð "Öåíà ìàòåðèàëà"
+-- Установить параметр "Цена материала"
 PROCEDURE SetCena (aCena IN DBRFO.DocMatMat.Cena%TYPE) IS
 BEGIN
   DBMS_SESSION.SET_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('CENA'), TO_CHAR(aCena));
 END;
 
--- Ïîëó÷èòü ïàðàìåòð "Öåíà ìàòåðèàëà"
+-- Получить параметр "Цена материала"
 FUNCTION GetCena RETURN DBRFO.DocMatMat.Cena%TYPE IS
 BEGIN
   RETURN TO_NUMBER(SYS_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('CENA')));
 END;
 
--- Óñòàíîâèòü ïàðàìåòð "Íà÷àëî îò÷åòíîãî ïåðèîäà"
+-- Установить параметр "Начало отчетного периода"
 PROCEDURE SetDateBeg (aDateBeg IN Date) IS
 BEGIN
   DBMS_SESSION.SET_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('DATEBEG'), TO_CHAR(aDateBeg));
 END;
 
--- Ïîëó÷èòü ïàðàìåòð "Íà÷àëî îò÷åòíîãî ïåðèîäà"
+-- Получить параметр "Начало отчетного периода"
 FUNCTION GetDateBeg RETURN Date IS
 BEGIN
   RETURN TO_DATE(SYS_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('DATEBEG')), 'dd.mm.yyyy');
 END;
 
--- Óñòàíîâèòü ïàðàìåòð "Êîíåö îò÷åòíîãî ïåðèîäà"
+-- Установить параметр "Конец отчетного периода"
 PROCEDURE SetDateEnd (aDateEnd IN Date) IS
 BEGIN
   DBMS_SESSION.SET_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('DATEEND'), TO_CHAR(aDateEnd));
 END;
 
--- Ïîëó÷èòü ïàðàìåòð "Êîíåö îò÷åòíîãî ïåðèîäà"
+-- Получить параметр "Конец отчетного периода"
 FUNCTION GetDateEnd RETURN Date IS
 BEGIN
   RETURN TO_DATE(SYS_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('DATEEND')), 'dd.mm.yyyy');
 END;
 
--- Óñòàíîâèòü ïàðàìåòð "ID ñóáêîíòî (ïîðàçäåëåíèå)"
+-- Установить параметр "ID субконто (поразделение)"
 PROCEDURE SetID_Sub (aID_Sub IN DBRFO.Subcont.ID_Sub%TYPE) IS
 BEGIN
   DBMS_SESSION.SET_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('ID_SUB'), TO_CHAR(aID_Sub));
 END;
 
--- Ïîëó÷èòü ïàðàìåòð "ID ñóáêîíòî (ïîðàçäåëåíèå)"
+-- Получить параметр "ID субконто (поразделение)"
 FUNCTION GetID_Sub RETURN DBRFO.Subcont.ID_Sub%TYPE IS
 BEGIN
   RETURN TO_NUMBER(SYS_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('ID_SUB')));
 END;
 
--- Ïîëó÷èòü ïàðàìåòðû ïî óìîë÷àíèþ
+-- Получить параметры по умолчанию
 PROCEDURE GetDflt
 ( outDateBeg   OUT DBRFO.Oborotmat.DATEBEG%TYPE
 , outDateEnd   OUT DBRFO.Oborotmat.DATEEND%TYPE
@@ -75,7 +75,7 @@ BEGIN
   outID_Sub := NULL;
 END;
 
--- âûçîâ îò÷åòà
+-- вызов отчета
 FUNCTION GetClob
 ( aDateBeg      IN DBRFO.Oborotmat.DATEEND%TYPE
 , aDateEnd      IN DBRFO.Oborotmat.DATEEND%TYPE
@@ -90,7 +90,7 @@ BEGIN
                                       );
 END;
 
--- Ïîêàçàòü îò÷åò ïî îáîðîòàì ìàòåðèàëîâ
+-- Показать отчет по оборотам материалов
 FUNCTION Show
 ( aDateBeg      IN DBRFO.Oborotmat.DATEEND%TYPE
 , aDateEnd      IN DBRFO.Oborotmat.DATEEND%TYPE
@@ -105,7 +105,7 @@ BEGIN
   SetID_Sub(aID_Sub);
 
   CASE aFlgOborotMat
-    -- Åñëè îáîðîòû ñóììàðíî ïî êîëè÷åñòâó
+    -- Если обороты суммарно по количеству
     WHEN cnstFlgOborotMat.sumKol THEN
       outFlgEdit := 1;
 
@@ -154,7 +154,7 @@ BEGIN
          AND rep.id_sub = nvl(aID_Sub, rep.id_sub)
        ORDER BY s.Kod||m.Kod;
     WHEN cnstFlgOborotMat.matCena THEN
-  -- Åñëè îáîðîòû ïî öåíàì ìàòåðèàëà
+  -- Если обороты по ценам материала
       outFlgEdit := 1;
 
       OPEN cr FOR
@@ -206,7 +206,7 @@ BEGIN
          AND rep.id_sub = nvl(aID_Sub, rep.id_sub)
        ORDER BY s.Kod||m.Kod;
     WHEN cnstFlgOborotMat.matSch THEN
-      -- Åñëè îáîðîòû ïî ñ÷åòàì
+      -- Если обороты по счетам
       outFlgEdit := 0;
 
       OPEN cr FOR
@@ -254,7 +254,7 @@ BEGIN
              OR KolKrd <> 0)
          AND rep.id_sub = nvl(aID_Sub, rep.id_sub);
      WHEN cnstFlgOborotMat.matAsrt then
-    -- Åñëè îáîðîòû ïî àññîðòèìåíòûì ãðóïïàì
+    -- Если обороты по ассортиментым группам
       outFlgEdit := 0;
 
       OPEN cr FOR
@@ -319,7 +319,7 @@ BEGIN
                                     JOIN krivoadmin.vwses_grpdepart_flt fltdep ON (d.id_grpdepart =  fltdep.id_grpDepart AND om.id_grnl = fltdep.id_grnl)
                                 )
           union all
-          select null, null, 'Âñå', null
+          select null, null, 'Все', null
             from dual
          )
    order by kod nulls first;
@@ -327,7 +327,7 @@ BEGIN
   return cr;
 END;
 
--- Ïîêàçàòü êàðòî÷êó ìàòåðèàëà
+-- Показать карточку материала
 FUNCTION ShowOborotMatCard RETURN SYS_REFCURSOR IS
   cr Sys_Refcursor;
   fCena DBRFO.DocMatMat.Cena%TYPE;
@@ -392,13 +392,13 @@ BEGIN
   RETURN cr;
 END;
 
--- Ïîêàçàòü âèäû îò÷åòîâ
+-- Показать виды отчетов
 FUNCTION ShowFlgOborotMat RETURN SYS_REFCURSOR IS
 BEGIN
   return pkg_oborotmat_i.ShowFlgOborotMat;
 END;
 
--- Îòêðûòèå ôîðìû
+-- Открытие формы
 PROCEDURE OpenForm
 ( aID_Mat IN DBRFO.Mater.ID_Mat%TYPE
 , aCena   IN DBRFO.DocMatMat.Cena%TYPE
@@ -415,7 +415,7 @@ BEGIN
   return pkg_oborotmat_i.CloseForm(ACLOSE => aClose);
 END;
 
--- Ïîëó÷èòü àòðèáóòû
+-- Получить атрибуты
 PROCEDURE GetHead
 ( outKolBeg  OUT DBRFO.OborotMat.KOLBEG%TYPE
 , outKolEnd  OUT DBRFO.OborotMat.KOLEND%TYPE
