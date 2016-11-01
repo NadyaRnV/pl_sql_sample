@@ -1,0 +1,79 @@
+PACKAGE            pkg_dep_oborotmat_i
+  IS
+
+-- Получить параметр "ID материала"
+FUNCTION GetID_Mat RETURN DBRFO.Mater.ID_Mat%TYPE;
+
+-- Получить параметр "Начало отчетного периода"
+FUNCTION GetDateBeg RETURN Date;
+
+-- Получить параметр "Конец отчетного периода"
+FUNCTION GetDateEnd RETURN Date;
+
+-- Получить параметр "ID субконто (поразделение)"
+FUNCTION GetID_Sub RETURN DBRFO.Subcont.ID_Sub%TYPE;
+
+-- Установить параметр "Начало отчетного периода"
+PROCEDURE SetDateBeg (aDateBeg IN Date);
+
+-- Установить параметр "Конец отчетного периода"
+PROCEDURE SetDateEnd (aDateEnd IN Date);
+
+-- Получить параметры по умолчанию
+PROCEDURE GetDflt
+( outDateBeg   OUT DBRFO.Oborotmat.DATEBEG%TYPE
+, outDateEnd   OUT DBRFO.Oborotmat.DATEEND%TYPE
+, outFlgObrMat OUT NUMBER
+, outID_Sub    OUT DBRFO.Oborotmat.id_sub%TYPE
+) ;
+
+-- вызов отчета
+FUNCTION GetClob
+( aDateBeg      IN DBRFO.Oborotmat.DATEEND%TYPE
+, aDateEnd      IN DBRFO.Oborotmat.DATEEND%TYPE
+, aFlgOborotMat IN NUMBER
+, aID_Sub       IN DBRFO.Oborotmat.id_sub%TYPE
+) RETURN CLOB;
+
+FUNCTION ShowDepart RETURN SYS_REFCURSOR;
+
+-- Показать отчет по оборотам материалов
+FUNCTION Show
+( aDateBeg      IN DBRFO.Oborotmat.DATEEND%TYPE
+, aDateEnd      IN DBRFO.Oborotmat.DATEEND%TYPE
+, aFlgOborotMat IN NUMBER
+, aID_Sub       IN DBRFO.Oborotmat.id_sub%TYPE
+, outFlgEdit    OUT NUMBER
+) RETURN SYS_REFCURSOR;
+
+-- Показать карточку материала
+FUNCTION ShowOborotMatCard RETURN SYS_REFCURSOR;
+
+-- Показать виды отчетов
+FUNCTION ShowFlgOborotMat RETURN SYS_REFCURSOR;
+
+-- Открытие формы
+PROCEDURE OpenForm
+( aID_Mat IN DBRFO.Mater.ID_Mat%TYPE
+, aCena   IN DBRFO.DocMatMat.Cena%TYPE
+);
+
+FUNCTION CloseForm
+( aClose IN NUMBER
+) RETURN NUMBER;
+
+-- Получить атрибуты
+PROCEDURE GetHead
+( outKolBeg  OUT DBRFO.OborotMat.KOLBEG%TYPE
+, outKolEnd  OUT DBRFO.OborotMat.KOLEND%TYPE
+, outSumBeg  OUT NUMBER
+, outSumEnd  OUT NUMBER
+, outDateBeg OUT DBRFO.Oborotmat.DATEBEG%TYPE
+, outDateEnd OUT DBRFO.Oborotmat.DATEEND%TYPE
+, outKod     OUT DBRFO.Mater.Kod%TYPE
+, outName    OUT DBRFO.Mater.Name%TYPE
+, outNameEI  OUT DBRFO.EI.Name%TYPE
+, outCena    OUT DBRFO.DocMatMat.Cena%TYPE
+);
+
+END; -- Package spec
