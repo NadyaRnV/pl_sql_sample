@@ -1,0 +1,463 @@
+PACKAGE BODY            pkg_dep_oborotmat_i
+IS
+
+-- Óñòàíîâèòü ïàðàìåòð "ID ìàòåðèàëà"
+PROCEDURE SetID_Mat (aID_Mat IN DBRFO.Mater.ID_Mat%TYPE) IS
+BEGIN
+  DBMS_SESSION.SET_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('ID_MAT'), TO_CHAR(aID_Mat));
+END;
+
+-- Ïîëó÷èòü ïàðàìåòð "ID ìàòåðèàëà"
+FUNCTION GetID_Mat RETURN DBRFO.Mater.ID_Mat%TYPE IS
+BEGIN
+  RETURN TO_NUMBER(SYS_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('ID_MAT')));
+END;
+
+-- Óñòàíîâèòü ïàðàìåòð "Öåíà ìàòåðèàëà"
+PROCEDURE SetCena (aCena IN DBRFO.DocMatMat.Cena%TYPE) IS
+BEGIN
+  DBMS_SESSION.SET_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('CENA'), TO_CHAR(aCena));
+END;
+
+-- Ïîëó÷èòü ïàðàìåòð "Öåíà ìàòåðèàëà"
+FUNCTION GetCena RETURN DBRFO.DocMatMat.Cena%TYPE IS
+BEGIN
+  RETURN TO_NUMBER(SYS_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('CENA')));
+END;
+
+-- Óñòàíîâèòü ïàðàìåòð "Íà÷àëî îò÷åòíîãî ïåðèîäà"
+PROCEDURE SetDateBeg (aDateBeg IN Date) IS
+BEGIN
+  DBMS_SESSION.SET_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('DATEBEG'), TO_CHAR(aDateBeg));
+END;
+
+-- Ïîëó÷èòü ïàðàìåòð "Íà÷àëî îò÷åòíîãî ïåðèîäà"
+FUNCTION GetDateBeg RETURN Date IS
+BEGIN
+  RETURN TO_DATE(SYS_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('DATEBEG')), 'dd.mm.yyyy');
+END;
+
+-- Óñòàíîâèòü ïàðàìåòð "Êîíåö îò÷åòíîãî ïåðèîäà"
+PROCEDURE SetDateEnd (aDateEnd IN Date) IS
+BEGIN
+  DBMS_SESSION.SET_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('DATEEND'), TO_CHAR(aDateEnd));
+END;
+
+-- Ïîëó÷èòü ïàðàìåòð "Êîíåö îò÷åòíîãî ïåðèîäà"
+FUNCTION GetDateEnd RETURN Date IS
+BEGIN
+  RETURN TO_DATE(SYS_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('DATEEND')), 'dd.mm.yyyy');
+END;
+
+-- Óñòàíîâèòü ïàðàìåòð "ID ñóáêîíòî (ïîðàçäåëåíèå)"
+PROCEDURE SetID_Sub (aID_Sub IN DBRFO.Subcont.ID_Sub%TYPE) IS
+BEGIN
+  DBMS_SESSION.SET_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('ID_SUB'), TO_CHAR(aID_Sub));
+END;
+
+-- Ïîëó÷èòü ïàðàìåòð "ID ñóáêîíòî (ïîðàçäåëåíèå)"
+FUNCTION GetID_Sub RETURN DBRFO.Subcont.ID_Sub%TYPE IS
+BEGIN
+  RETURN TO_NUMBER(SYS_CONTEXT('CNT_DEP_OBOROTMAT_I', upper('ID_SUB')));
+END;
+
+-- Ïîëó÷èòü ïàðàìåòðû ïî óìîë÷àíèþ
+PROCEDURE GetDflt
+( outDateBeg   OUT DBRFO.Oborotmat.DATEBEG%TYPE
+, outDateEnd   OUT DBRFO.Oborotmat.DATEEND%TYPE
+, outFlgObrMat OUT NUMBER
+, outID_Sub    OUT DBRFO.Oborotmat.id_sub%TYPE
+) IS
+BEGIN
+  outDateBeg := trunc(sysdate, 'mm');
+  outDateEnd := trunc(sysdate);
+  outFlgObrMat := cnstFlgOborotMat.sumKol;
+  outID_Sub := NULL;
+END;
+
+-- âûçîâ îò÷åòà
+FUNCTION GetClob
+( aDateBeg      IN DBRFO.Oborotmat.DATEEND%TYPE
+, aDateEnd      IN DBRFO.Oborotmat.DATEEND%TYPE
+, aFlgOborotMat IN NUMBER
+, aID_Sub       IN DBRFO.Oborotmat.id_sub%TYPE
+) RETURN CLOB IS
+BEGIN
+  RETURN PKG_RP_DEP_OBOROT_MAT.GetClob( aDateBeg => aDateBeg
+                                      , aDateEnd => aDateEnd
+                                      , aFlgOborotMat => aFlgOborotMat
+                                      , aID_Sub => aID_Sub
+                                      );
+END;
+
+-- Ïîêàçàòü îò÷åò ïî îáîðîòàì ìàòåðèàëîâ
+FUNCTION Show
+( aDateBeg      IN DBRFO.Oborotmat.DATEEND%TYPE
+, aDateEnd      IN DBRFO.Oborotmat.DATEEND%TYPE
+, aFlgOborotMat IN NUMBER
+, aID_Sub       IN DBRFO.Oborotmat.id_sub%TYPE
+, outFlgEdit    OUT NUMBER
+) RETURN SYS_REFCURSOR IS
+  cr SYS_REFCURSOR;
+BEGIN
+  SetDateBeg(aDateBeg);
+  SetDateEnd(aDateEnd);
+  SetID_Sub(aID_Sub);
+
+  CASE aFlgOborotMat
+    -- Åñëè îáîðîòû ñóììàðíî ïî êîëè÷åñòâó
+    WHEN cnstFlgOborotMat.sumKol THEN
+      outFlgEdit := 1;
+
+      OPEN cr FOR
+      SELECT m.id_mat
+           , s.Kod KodSub
+           , s.Name NameSub
+           , m.Kod KodMater
+           , m.Name NameMater
+           , ei.Name NameEi
+           , NULL Cena
+           , NULL Sch
+           , NULL Ssch
+           , NULL KodSub1
+           , NULL KodSub2
+           , NULL KodSub3
+           , NULLIF(round(rep.KolBeg, 3), 0) AS KolBeg
+           , NULLIF(round(rep.SumBeg, 2), 0) SumBeg
+           , NULLIF(round(rep.KolDbt, 3), 0) KolDbt
+           , NULLIF(round(rep.SumDbt, 2), 0) SumDbt
+           , NULLIF(round(rep.KolKrd, 3), 0) KolKrd
+           , NULLIF(round(rep.SumKrd, 2), 0) SumKrd
+           , NULLIF(round(rep.KolEnd, 3), 0) KolEnd
+           , NULLIF(round(rep.SumEnd, 2), 0) SumEnd
+           , ma.Kod KodMatAsrt
+           , ma.name NameMatAsrt
+        FROM (SELECT ID_Sub, ID_Mat
+                   , SUM(KolBeg) KolBeg
+                   , SUM(KolBeg * Cena) SumBeg
+                   , SUM(KolDbt) KolDbt
+                   , SUM(KolDbt * Cena) SumDbt
+                   , SUM(KolKrd) KolKrd
+                   , SUM(KolKrd * Cena) SumKrd
+                   , SUM(KolEnd) KolEnd
+                   , SUM(KolEnd * Cena) SumEnd
+                FROM vw_Dep_OborotMat
+               GROUP BY ID_Sub, ID_Mat) rep
+        JOIN DBRFO.Mater m ON (rep.ID_Mat = m.ID_Mat )
+        JOIN DBRFO.EI ei ON (m.ID_EI = ei.ID_EI)
+        JOIN DBRFO.Subcont s ON (s.ID_SUB = rep.ID_SUB)
+        JOIN DBRFO.MatAsrt ma ON (ma.ID_MatAsrt = m.ID_MatAsrt)
+       WHERE ( KolBeg <> 0
+             OR KolEnd <> 0
+             OR KolDbt <> 0
+             OR KolKrd <> 0)
+         AND rep.id_sub = nvl(aID_Sub, rep.id_sub)
+       ORDER BY s.Kod||m.Kod;
+    WHEN cnstFlgOborotMat.matCena THEN
+  -- Åñëè îáîðîòû ïî öåíàì ìàòåðèàëà
+      outFlgEdit := 1;
+
+      OPEN cr FOR
+      SELECT m.id_mat
+           , s.Kod KodSub
+           , s.Name NameSub
+           , m.Kod KodMater
+           , m.Name NameMater
+           , ei.Name NameEi
+           , rep.Cena Cena
+           , sc.Sch
+           , sc.Ssch
+           , sub1.Kod KodSub1
+           , sub2.Kod KodSub2
+           , sub3.Kod KodSub3
+           , NULLIF(round(rep.KolBeg, 3), 0) AS KolBeg
+           , NULLIF(round(rep.SumBeg, 2), 0) SumBeg
+           , NULLIF(round(rep.KolDbt, 3), 0) KolDbt
+           , NULLIF(round(rep.SumDbt, 2), 0) SumDbt
+           , NULLIF(round(rep.KolKrd, 3), 0) KolKrd
+           , NULLIF(round(rep.SumKrd, 2), 0) SumKrd
+           , NULLIF(round(rep.KolEnd, 3), 0) KolEnd
+           , NULLIF(round(rep.SumEnd, 2), 0) SumEnd
+           , ma.Kod KodMatAsrt
+           , ma.name NameMatAsrt
+        FROM (SELECT ID_Sub, ID_Mat, Cena, ID_Sc, ID_Sub1, ID_Sub2, ID_Sub3
+                   , SUM(KolBeg) KolBeg
+                   , SUM(KolBeg * Cena) SumBeg
+                   , SUM(KolDbt) KolDbt
+                   , SUM(KolDbt * Cena) SumDbt
+                   , SUM(KolKrd) KolKrd
+                   , SUM(KolKrd * Cena) SumKrd
+                   , SUM(KolEnd) KolEnd
+                   , SUM(KolEnd * Cena) SumEnd
+                FROM vw_Dep_OborotMat
+               GROUP BY ID_Sub, ID_Mat, Cena, ID_Sc, ID_Sub1, ID_Sub2, ID_Sub3) rep
+        JOIN DBRFO.Mater m ON (rep.ID_Mat = m.ID_Mat )
+        JOIN DBRFO.EI ei ON (m.ID_EI = ei.ID_EI)
+        JOIN DBRFO.Subcont s ON (s.ID_SUB = rep.ID_SUB)
+        JOIN DBRFO.MatAsrt ma ON (ma.ID_MatAsrt = m.ID_MatAsrt)
+        LEFT JOIN DBRFO.ScPln sc on (rep.ID_Sc = sc.ID_Sc)
+        LEFT JOIN dbrfo.Subcont sub1 on (rep.ID_Sub1 = sub1.ID_Sub)
+        LEFT JOIN dbrfo.Subcont sub2 on (rep.ID_Sub2 = sub2.ID_Sub)
+        LEFT JOIN dbrfo.Subcont sub3 on (rep.ID_Sub3 = sub3.ID_Sub)
+       WHERE ( KolBeg <> 0
+             OR KolEnd <> 0
+             OR KolDbt <> 0
+             OR KolKrd <> 0)
+         AND rep.id_sub = nvl(aID_Sub, rep.id_sub)
+       ORDER BY s.Kod||m.Kod;
+    WHEN cnstFlgOborotMat.matSch THEN
+      -- Åñëè îáîðîòû ïî ñ÷åòàì
+      outFlgEdit := 0;
+
+      OPEN cr FOR
+      SELECT s.Kod KodSub
+           , s.Name NameSub
+           , NULL KodMater
+           , NULL NameMater
+           , NULL NameEi
+           , NULL Cena
+           , sc.Sch
+           , sc.Ssch
+           , sub1.Kod KodSub1
+           , sub2.Kod KodSub2
+           , sub3.Kod KodSub3
+           , NULLIF(round(rep.KolBeg, 3), 0) AS KolBeg
+           , NULLIF(round(rep.SumBeg, 2), 0) SumBeg
+           , NULLIF(round(rep.KolDbt, 3), 0) KolDbt
+           , NULLIF(round(rep.SumDbt, 2), 0) SumDbt
+           , NULLIF(round(rep.KolKrd, 3), 0) KolKrd
+           , NULLIF(round(rep.SumKrd, 2), 0) SumKrd
+           , NULLIF(round(rep.KolEnd, 3), 0) KolEnd
+           , NULLIF(round(rep.SumEnd, 2), 0) SumEnd
+           , NULL KodMatAsrt
+           , NULL NameMatAsrt
+        FROM (select ID_Sub, ID_Sc, ID_Sub1, ID_Sub2, ID_Sub3
+                   , SUM(KolBeg) KolBeg
+                   , SUM(KolBeg * Cena) SumBeg
+                   , SUM(KolDbt) KolDbt
+                   , SUM(KolDbt * Cena) SumDbt
+                   , SUM(KolKrd) KolKrd
+                   , SUM(KolKrd * Cena) SumKrd
+                   , SUM(KolEnd) KolEnd
+                   , SUM(KolEnd * Cena) SumEnd
+                FROM vw_Dep_OborotMat
+                GROUP BY ID_Sub, ID_Sc, ID_Sub1, ID_Sub2, ID_Sub3
+             ) rep
+        JOIN dbrfo.subcont s on (s.id_sub = rep.id_sub)
+        LEFT JOIN dbrfo.ScPln sc on (rep.id_sc = sc.id_sc)
+        LEFT JOIN dbrfo.Subcont sub1 on (rep.id_sub1 = sub1.id_sub)
+        LEFT JOIN dbrfo.Subcont sub2 on (rep.id_sub2 = sub2.id_sub)
+        LEFT JOIN dbrfo.Subcont sub3 on (rep.id_sub3 = sub3.id_sub)
+       WHERE ( KolBeg <> 0
+             OR KolEnd <> 0
+             OR KolDbt <> 0
+             OR KolKrd <> 0)
+         AND rep.id_sub = nvl(aID_Sub, rep.id_sub);
+     WHEN cnstFlgOborotMat.matAsrt then
+    -- Åñëè îáîðîòû ïî àññîðòèìåíòûì ãðóïïàì
+      outFlgEdit := 0;
+
+      OPEN cr FOR
+      SELECT NULL KodSub
+           , NULL NameSub
+           , NULL KodMater
+           , NULL NameMater
+           , NULL NameEi
+           , NULL Cena
+           , NULL Sch
+           , NULL Ssch
+           , NULL KodSub1
+           , NULL KodSub2
+           , NULL KodSub3
+           , NULLIF(round(rep.KolBeg, 3), 0) AS KolBeg
+           , NULLIF(round(rep.SumBeg, 2), 0) SumBeg
+           , NULLIF(round(rep.KolDbt, 3), 0) KolDbt
+           , NULLIF(round(rep.SumDbt, 2), 0) SumDbt
+           , NULLIF(round(rep.KolKrd, 3), 0) KolKrd
+           , NULLIF(round(rep.SumKrd, 2), 0) SumKrd
+           , NULLIF(round(rep.KolEnd, 3), 0) KolEnd
+           , NULLIF(round(rep.SumEnd, 2), 0) SumEnd
+           , ma.Kod KodMatAsrt
+           , ma.name NameMatAsrt
+        FROM (SELECT id_sub, id_matasrt
+                   , SUM(KolBeg) KolBeg
+                   , SUM(KolBeg * Cena) SumBeg
+                   , SUM(KolDbt) KolDbt
+                   , SUM(KolDbt * Cena) SumDbt
+                   , SUM(KolKrd) KolKrd
+                   , SUM(KolKrd * Cena) SumKrd
+                   , SUM(KolEnd) KolEnd
+                   , SUM(KolEnd * Cena) SumEnd
+                FROM vw_Dep_OborotMat vw
+                JOIN dbrfo.mater m ON (vw.id_mat = m.id_mat )
+               GROUP BY id_matasrt, id_sub) rep
+        JOIN dbrfo.subcont s on (s.id_sub = rep.id_sub)
+        JOIN dbrfo.matasrt ma on (ma.id_matasrt = rep.id_matasrt)
+       WHERE ( KolBeg <> 0
+             OR KolEnd <> 0
+             OR KolDbt <> 0
+             OR KolKrd <> 0)
+         AND rep.id_sub = nvl(aID_Sub, rep.id_sub);
+  END CASE;
+  RETURN cr;
+END;
+
+FUNCTION ShowDepart RETURN SYS_REFCURSOR IS
+  cr SYS_REFCURSOR;
+BEGIN
+
+  OPEN cr FOR
+  select *
+    from (SELECT s.ID_SUB, s.kod, s.NAME name_sub, s.ID_SUBCONT
+            FROM dbrfo.Subcont s
+            JOIN dbrfo.depart d on (d.id_sub = s.id_sub)
+            JOIN krivoadmin.vwses_grpdepart_flt fltdep ON (d.id_grpdepart =  fltdep.id_grpDepart)
+           where s.id_subcont IN (SELECT DISTINCT s.ID_Subcont
+                                    FROM dbrfo.subcont s
+                                    JOIN dbrfo.depart d on (d.id_sub = s.id_sub)
+                                    JOIN dbrfo.oborotmat om on (s.id_sub = om.id_sub)
+                                    JOIN krivoadmin.vwses_grpdepart_flt fltdep ON (d.id_grpdepart =  fltdep.id_grpDepart AND om.id_grnl = fltdep.id_grnl)
+                                )
+          union all
+          select null, null, 'Âñå', null
+            from dual
+         )
+   order by kod nulls first;
+
+  return cr;
+END;
+
+-- Ïîêàçàòü êàðòî÷êó ìàòåðèàëà
+FUNCTION ShowOborotMatCard RETURN SYS_REFCURSOR IS
+  cr Sys_Refcursor;
+  fCena DBRFO.DocMatMat.Cena%TYPE;
+BEGIN
+  fCena := GetCena;
+
+  IF GetID_Sub IS NULL THEN
+    RETURN null;
+  END IF;
+
+  IF fCena IS NOT NULL then
+    OPEN cr FOR
+    SELECT vw.DateDoc
+         , vw.NumDoc
+         , vw.ID_Doc
+         , vw.ID_DocMat
+         , vw.NameTipHop
+         , NULLIF(DECODE(vw.ID_SubDst, GetID_Sub, vw.Kol, 0), 0) "KOLDBT"
+         , NULLIF(DECODE(vw.ID_SubDst, GetID_Sub, vw.Summa, 0), 0) "SUMDBT"
+         , NULLIF(DECODE(vw.ID_SubSrc, GetID_Sub, vw.Kol, 0), 0) "KOLKRD"
+         , NULLIF(DECODE(vw.ID_SubSrc, GetID_Sub, vw.Summa, 0), 0) "SUMKRD"
+         , DECODE(vw.ID_SubDst, GetID_Sub, vw.Kod_SubSrc, vw.Kod_SubDst) "KODSUB"
+         , DECODE(vw.ID_SubDst, GetID_Sub, vw.Name_SubSrc, vw.Name_SubDst) "NAMESUB"
+      FROM vw_dep_OborotMatCard vw
+      JOIN krivoadmin.vwses_gurnal_flt flt on (vw.id_grnl = flt.id_grnl)
+     WHERE vw.Cena = fCena
+       AND vw.DateDoc between pkg_dep_oborotmat_i.GetDateBeg and pkg_dep_oborotmat_i.GetDateEnd
+       AND ((vw.ID_SubSrc = nvl(GetID_Sub, vw.ID_SubSrc)) OR (vw.ID_SubDst = nvl(GetID_Sub, vw.ID_SubDst)))
+     ORDER BY vw.DateDoc
+            , vw.NumDoc
+            , vw.ID_DocMat;
+  ELSE
+    OPEN cr FOR
+     SELECT vw.DateDoc
+          , vw.NumDoc
+          , vw.ID_Doc
+          , 0 ID_DocMat
+          , vw.NameTipHop
+          , NULLIF(sum(DECODE(vw.ID_SubDst, GetID_Sub, vw.Kol, 0)), 0) "KOLDBT"
+          , NULLIF(sum(DECODE(vw.ID_SubDst, GetID_Sub, vw.Summa, 0)), 0) "SUMDBT"
+          , NULLIF(sum(DECODE(vw.ID_SubSrc, GetID_Sub, vw.Kol, 0)), 0) "KOLKRD"
+          , NULLIF(sum(DECODE(vw.ID_SubSrc, GetID_Sub, vw.Summa, 0)), 0) "SUMKRD"
+          , DECODE(vw.ID_SubDst, GetID_Sub, vw.Kod_SubSrc, vw.Kod_SubDst) "KODSUB"
+          , DECODE(vw.ID_SubDst, GetID_Sub, vw.Name_SubSrc, vw.Name_SubDst) "NAMESUB"
+       FROM vw_dep_OborotMatCard vw
+       JOIN krivoadmin.vwses_gurnal_flt flt on (vw.id_grnl = flt.id_grnl)
+      WHERE vw.DateDoc between pkg_dep_oborotmat_i.GetDateBeg and pkg_dep_oborotmat_i.GetDateEnd
+        AND ((vw.ID_SubSrc = nvl(GetID_Sub, vw.ID_SubSrc)) OR (vw.ID_SubDst = nvl(GetID_Sub, vw.ID_SubDst)))
+      GROUP BY vw.DateDoc
+          , vw.NumDoc
+          , vw.ID_Doc
+          , vw.NAMETIPHOP
+          , DECODE(vw.ID_SubDst, GetID_Sub, vw.Kod_SubSrc, vw.Kod_SubDst)
+          , DECODE(vw.ID_SubDst, GetID_Sub, vw.Name_SubSrc, vw.Name_SubDst)
+      ORDER BY vw.DateDoc
+          , vw.NumDoc
+          , vw.ID_Doc
+          , vw.NAMETIPHOP
+          , DECODE(vw.ID_SubDst, GetID_Sub, vw.Kod_SubSrc, vw.Kod_SubDst)
+          , DECODE(vw.ID_SubDst, GetID_Sub, vw.Name_SubSrc, vw.Name_SubDst);
+  END IF;
+  RETURN cr;
+END;
+
+-- Ïîêàçàòü âèäû îò÷åòîâ
+FUNCTION ShowFlgOborotMat RETURN SYS_REFCURSOR IS
+BEGIN
+  return pkg_oborotmat_i.ShowFlgOborotMat;
+END;
+
+-- Îòêðûòèå ôîðìû
+PROCEDURE OpenForm
+( aID_Mat IN DBRFO.Mater.ID_Mat%TYPE
+, aCena   IN DBRFO.DocMatMat.Cena%TYPE
+) IS
+BEGIN
+  SetID_Mat(aID_Mat);
+  SetCena(aCena);
+END;
+
+FUNCTION CloseForm
+( aClose IN NUMBER
+) RETURN NUMBER IS
+BEGIN
+  return pkg_oborotmat_i.CloseForm(ACLOSE => aClose);
+END;
+
+-- Ïîëó÷èòü àòðèáóòû
+PROCEDURE GetHead
+( outKolBeg  OUT DBRFO.OborotMat.KOLBEG%TYPE
+, outKolEnd  OUT DBRFO.OborotMat.KOLEND%TYPE
+, outSumBeg  OUT NUMBER
+, outSumEnd  OUT NUMBER
+, outDateBeg OUT DBRFO.Oborotmat.DATEBEG%TYPE
+, outDateEnd OUT DBRFO.Oborotmat.DATEEND%TYPE
+, outKod     OUT DBRFO.Mater.Kod%TYPE
+, outName    OUT DBRFO.Mater.Name%TYPE
+, outNameEI  OUT DBRFO.EI.Name%TYPE
+, outCena    OUT DBRFO.DocMatMat.Cena%TYPE
+) IS
+  fCena DBRFO.DocMatMat.Cena%TYPE;
+BEGIN
+  fCena := GetCena;
+  outCena := fCena;
+
+  SELECT round(SUM(KolBeg) KEEP (DENSE_RANK FIRST ORDER BY NVL(DateBeg, GetDateBeg)), 3) KolBeg
+       , round(SUM(KolBeg * Cena) KEEP (DENSE_RANK FIRST ORDER BY NVL(DateBeg, GetDateBeg)), 2) SumBeg
+       , round(SUM(KolEnd) KEEP (DENSE_RANK LAST ORDER BY NVL(DateBeg, GetDateEnd)), 3) KolEnd
+       , round(SUM(KolEnd * Cena) KEEP (DENSE_RANK LAST ORDER BY NVL(DateBeg, GetDateEnd)), 2) SumEnd
+       , m.Kod
+       , m.Name
+       , ei.Name NameEI
+       , GetDateBeg
+       , GetDateEnd
+    INTO outKolBeg
+       , outSumBeg
+       , outKolEnd
+       , outSumEnd
+       , outKod
+       , outName
+       , outNameEI
+       , outDateBeg
+       , outDateEnd
+    FROM dbbuhmater.vw_dep_oborotmat vw
+    JOIN DBRFO.Mater m ON (vw.ID_Mat = m.ID_Mat )
+    JOIN DBRFO.EI ei ON (m.ID_EI = ei.ID_EI)
+   WHERE vw.ID_Mat = GetID_Mat
+     AND vw.Cena = NVL(fCena, vw.Cena)
+     AND vw.id_sub = nvl(GetID_Sub, vw.id_sub)
+   GROUP BY m.Kod, m.Name, ei.Name ;
+END;
+
+END;
